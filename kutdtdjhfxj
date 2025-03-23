@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Translation Practice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        #container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Word Translation Practice</h2>
+        <div id="setup">
+            <p>Enter 1-20 words and their translations:</p>
+            <input type="text" id="word" placeholder="Enter a word">
+            <input type="text" id="translation" placeholder="Enter translation">
+            <button onclick="addWord()">Add</button>
+            <p id="count">Words added: 0/20</p>
+            <button onclick="startPractice()" disabled id="start">Start Practice</button>
+        </div>
+        <div id="practice" style="display: none;">
+            <p id="question"></p>
+            <input type="text" id="answer" placeholder="Enter translation">
+            <button onclick="checkAnswer()">Submit</button>
+            <p id="feedback"></p>
+        </div>
+    </div>
+
+    <script>
+        let words = {};
+        let keys = [];
+        let answeredCorrectly = new Set();
+        let currentWord = "";
+        
+        function addWord() {
+            let word = document.getElementById("word").value.trim();
+            let translation = document.getElementById("translation").value.trim();
+            
+            if (word && translation && !(word in words)) {
+                words[word] = translation;
+                document.getElementById("word").value = "";
+                document.getElementById("translation").value = "";
+                let count = Object.keys(words).length;
+                document.getElementById("count").textContent = `Words added: ${count}/20`;
+                if (count >= 1) {
+                    document.getElementById("start").disabled = false;
+                }
+            }
+        }
+
+        function startPractice() {
+            document.getElementById("setup").style.display = "none";
+            document.getElementById("practice").style.display = "block";
+            keys = Object.keys(words);
+            nextQuestion();
+        }
+        
+        function nextQuestion() {
+            if (answeredCorrectly.size >= keys.length) {
+                document.getElementById("practice").innerHTML = "<h3>Great job! You translated all words correctly.</h3>";
+                return;
+            }
+            currentWord = keys[Math.floor(Math.random() * keys.length)];
+            if (answeredCorrectly.has(currentWord)) {
+                nextQuestion();
+                return;
+            }
+            document.getElementById("question").textContent = `Translate: '${currentWord}'`;
+            document.getElementById("answer").value = "";
+            document.getElementById("feedback").textContent = "";
+        }
+
+        function checkAnswer() {
+            let answer = document.getElementById("answer").value.trim();
+            if (answer === words[currentWord]) {
+                document.getElementById("feedback").textContent = "Correct!";
+                answeredCorrectly.add(currentWord);
+                setTimeout(nextQuestion, 1000);
+            } else {
+                document.getElementById("feedback").textContent = "Incorrect, try again later.";
+            }
+        }
+    </script>
+</body>
+</html>
