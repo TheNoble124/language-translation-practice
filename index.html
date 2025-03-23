@@ -7,28 +7,86 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
+            background-color: #2e2e2e;
+            color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
         }
         #container {
-            background: white;
-            padding: 20px;
+            background-color: #333;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            margin: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            font-size: 24px;
+            color: #f1f1f1;
+            text-align: center;
         }
         input, button {
-            margin-top: 10px;
             padding: 10px;
-            width: 80%;
+            margin-top: 15px;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 16px;
+            border: 1px solid #888;
+            background-color: #444;
+            color: #f1f1f1;
+        }
+        input:focus, button:focus {
+            outline: none;
+            border-color: #aaa;
+        }
+        button {
+            cursor: pointer;
+            background-color: #5a5a5a;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #6b6b6b;
+        }
+        #setup, #practice {
+            display: block;
+        }
+        #practice {
+            display: none;
+        }
+        #feedback {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #feedback.correct {
+            color: #5cb85c;
+        }
+        #feedback.incorrect {
+            color: #d9534f;
+        }
+        .hidden {
+            display: none;
+        }
+        .completed {
+            font-size: 20px;
+            color: #5bc0de;
+        }
+        .center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
 <body>
     <div id="container">
         <h2>Word Translation Practice</h2>
+        
         <div id="setup">
             <p>Enter 1-20 words and their translations:</p>
             <input type="text" id="word" placeholder="Enter a word">
@@ -37,11 +95,19 @@
             <p id="count">Words added: 0/20</p>
             <button onclick="startPractice()" disabled id="start">Start Practice</button>
         </div>
-        <div id="practice" style="display: none;">
+        
+        <div id="practice">
             <p id="question"></p>
             <input type="text" id="answer" placeholder="Enter translation">
             <button onclick="checkAnswer()">Submit</button>
+            <button onclick="giveHint()">Hint</button>
             <p id="feedback"></p>
+        </div>
+
+        <div id="completed" class="hidden">
+            <p class="completed">Congratulations! You've translated all words correctly.</p>
+            <button onclick="playAgain()">Play Again with Same Words</button>
+            <button onclick="resetGame()">Start with New Words</button>
         </div>
     </div>
 
@@ -50,6 +116,8 @@
         let keys = [];
         let answeredCorrectly = new Set();
         let currentWord = "";
+        let isReversed = false;
+        let hintGiven = false;
         
         function addWord() {
             let word = document.getElementById("word").value.trim();
@@ -76,7 +144,8 @@
         
         function nextQuestion() {
             if (answeredCorrectly.size >= keys.length) {
-                document.getElementById("practice").innerHTML = "<h3>Great job! You translated all words correctly.</h3>";
+                document.getElementById("practice").style.display = "none";
+                document.getElementById("completed").style.display = "block";
                 return;
             }
             currentWord = keys[Math.floor(Math.random() * keys.length)];
@@ -84,20 +153,59 @@
                 nextQuestion();
                 return;
             }
-            document.getElementById("question").textContent = `Translate: '${currentWord}'`;
+            hintGiven = false; // Reset hint flag
+            document.getElementById("question").textContent = `Translate: '${isReversed ? words[currentWord] : currentWord}'`;
             document.getElementById("answer").value = "";
             document.getElementById("feedback").textContent = "";
         }
 
         function checkAnswer() {
             let answer = document.getElementById("answer").value.trim();
-            if (answer === words[currentWord]) {
+            let correctAnswer = isReversed ? currentWord : words[currentWord];
+
+            if (answer === correctAnswer) {
                 document.getElementById("feedback").textContent = "Correct!";
+                document.getElementById("feedback").classList.remove('incorrect');
+                document.getElementById("feedback").classList.add('correct');
                 answeredCorrectly.add(currentWord);
                 setTimeout(nextQuestion, 1000);
             } else {
-                document.getElementById("feedback").textContent = "Incorrect, try again later.";
+                document.getElementById("feedback").textContent = "Incorrect, try again.";
+                document.getElementById("feedback").classList.remove('correct');
+                document.getElementById("feedback").classList.add('incorrect');
             }
+        }
+
+        function giveHint() {
+            if (!hintGiven) {
+                let wordToHint = currentWord;
+                let halfWord = wordToHint.slice(0, Math.floor(wordToHint.length / 2)) + '...';
+                document.getElementById("feedback").textContent = `Hint: ${halfWord}`;
+                hintGiven = true;
+            }
+        }
+
+        function playAgain() {
+            // Reset game with the same words
+            answeredCorrectly.clear();
+            document.getElementById("completed").style.display = "none";
+            document.getElementById("practice").style.display = "block";
+            nextQuestion();
+        }
+
+        function resetGame() {
+            // Reset game with new words
+            words = {};
+            answeredCorrectly.clear();
+            document.getElementById("completed").style.display = "none";
+            document.getElementById("setup").style.display = "block";
+            document.getElementById("count").textContent = `Words added: 0/20`;
+            document.getElementById("start").disabled = true;
+        }
+        
+        function toggleReverse() {
+            isReversed = !isReversed;
+            nextQuestion();
         }
     </script>
 </body>
