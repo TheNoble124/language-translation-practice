@@ -59,21 +59,27 @@
             display: none;
         }
         #feedback {
-            color: #d9534f;
             text-align: center;
             margin-top: 10px;
+            font-size: 16px;
+        }
+        #feedback.correct {
+            color: #5cb85c;
+        }
+        #feedback.incorrect {
+            color: #d9534f;
         }
         .hidden {
             display: none;
+        }
+        .completed {
+            font-size: 20px;
+            color: #5bc0de;
         }
         .center {
             display: flex;
             justify-content: center;
             align-items: center;
-        }
-        .completed {
-            font-size: 20px;
-            color: #5bc0de;
         }
     </style>
 </head>
@@ -94,12 +100,14 @@
             <p id="question"></p>
             <input type="text" id="answer" placeholder="Enter translation">
             <button onclick="checkAnswer()">Submit</button>
+            <button onclick="giveHint()">Hint</button>
             <p id="feedback"></p>
         </div>
 
         <div id="completed" class="hidden">
             <p class="completed">Congratulations! You've translated all words correctly.</p>
-            <button onclick="playAgain()">Play Again</button>
+            <button onclick="playAgain()">Play Again with Same Words</button>
+            <button onclick="resetGame()">Start with New Words</button>
         </div>
     </div>
 
@@ -108,6 +116,8 @@
         let keys = [];
         let answeredCorrectly = new Set();
         let currentWord = "";
+        let isReversed = false;
+        let hintGiven = false;
         
         function addWord() {
             let word = document.getElementById("word").value.trim();
@@ -143,30 +153,59 @@
                 nextQuestion();
                 return;
             }
-            document.getElementById("question").textContent = `Translate: '${currentWord}'`;
+            hintGiven = false; // Reset hint flag
+            document.getElementById("question").textContent = `Translate: '${isReversed ? words[currentWord] : currentWord}'`;
             document.getElementById("answer").value = "";
             document.getElementById("feedback").textContent = "";
         }
 
         function checkAnswer() {
             let answer = document.getElementById("answer").value.trim();
-            if (answer === words[currentWord]) {
+            let correctAnswer = isReversed ? currentWord : words[currentWord];
+
+            if (answer === correctAnswer) {
                 document.getElementById("feedback").textContent = "Correct!";
+                document.getElementById("feedback").classList.remove('incorrect');
+                document.getElementById("feedback").classList.add('correct');
                 answeredCorrectly.add(currentWord);
                 setTimeout(nextQuestion, 1000);
             } else {
                 document.getElementById("feedback").textContent = "Incorrect, try again.";
+                document.getElementById("feedback").classList.remove('correct');
+                document.getElementById("feedback").classList.add('incorrect');
+            }
+        }
+
+        function giveHint() {
+            if (!hintGiven) {
+                let wordToHint = currentWord;
+                let halfWord = wordToHint.slice(0, Math.floor(wordToHint.length / 2)) + '...';
+                document.getElementById("feedback").textContent = `Hint: ${halfWord}`;
+                hintGiven = true;
             }
         }
 
         function playAgain() {
-            // Reset everything to start over
+            // Reset game with the same words
+            answeredCorrectly.clear();
+            document.getElementById("completed").style.display = "none";
+            document.getElementById("practice").style.display = "block";
+            nextQuestion();
+        }
+
+        function resetGame() {
+            // Reset game with new words
             words = {};
             answeredCorrectly.clear();
             document.getElementById("completed").style.display = "none";
             document.getElementById("setup").style.display = "block";
             document.getElementById("count").textContent = `Words added: 0/20`;
             document.getElementById("start").disabled = true;
+        }
+        
+        function toggleReverse() {
+            isReversed = !isReversed;
+            nextQuestion();
         }
     </script>
 </body>
